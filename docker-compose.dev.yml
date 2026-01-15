@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tyotrack-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: tyotrack_user
+      POSTGRES_PASSWORD: Tyotrack2026
+      POSTGRES_DB: tyotrack
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: tyotrack-redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.dev
+    container_name: tyotrack-api
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: "postgresql://tyotrack_user:Tyotrack2026@postgres:5432/tyotrack?schema=public"
+      REDIS_URL: "redis://redis:6379"
+      JWT_SECRET: "super-secret-key-change-me-in-prod"
+      PORT: 3050
+      CI: "true"
+    ports:
+      - "3050:3050"
+    command: sleep infinity
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile.dev
+    container_name: tyotrack-web
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:3050"
+      CI: "true"
+    ports:
+      - "3000:3000"
+    command: >
+      sh -c "pnpm install && 
+             pnpm --filter @tyotrack/web dev"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile.dev
+    container_name: tyotrack-worker
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: "postgresql://tyotrack_user:Tyotrack2026@postgres:5432/tyotrack?schema=public"
+      REDIS_URL: "redis://redis:6379"
+      CI: "true"
+    command: >
+      sh -c "pnpm install && 
+             pnpm --filter @tyotrack/worker dev"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+volumes:
+  postgres_data:

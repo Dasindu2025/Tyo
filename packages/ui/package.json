@@ -1,0 +1,10 @@
+{
+  "name": "@tyotrack/ui",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "react": "^18.2.0",
+    "tailwind-merge": "^2.0.0",
+    "clsx": "^2.0.0"
+  }
+}

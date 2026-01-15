@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tyotrack-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_USER: tyotrack_user
+      POSTGRES_PASSWORD: Tyotrack@13!#
+      POSTGRES_DB: tyotrack
+    # No ports exposed in prod
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: tyotrack-redis-prod
+    restart: always
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: tyotrack-api-prod
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: "postgresql://tyotrack_user:Tyotrack@13!#@postgres:5432/tyotrack?schema=public"
+      REDIS_URL: "redis://redis:6379"
+      JWT_SECRET: "change-this-in-vps-env"
+      PORT: 3050
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: tyotrack-web-prod
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_URL: "https://api.tyotrack.com"
+    ports:
+      - "3000:3000"
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    container_name: tyotrack-worker-prod
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DATABASE_URL: "postgresql://tyotrack_user:Tyotrack@13!#@postgres:5432/tyotrack?schema=public"
+      REDIS_URL: "redis://redis:6379"
+
+volumes:
+  postgres_data_prod:

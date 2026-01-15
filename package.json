@@ -1,0 +1,20 @@
+{
+  "name": "tyotrack",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "pnpm -r dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "docker:dev": "docker compose -f docker-compose.dev.yml up --build",
+    "docker:prod": "docker compose -f docker-compose.prod.yml up --build"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,18 @@
+FROM node:20-alpine
+
+WORKDIR /usr/src/app
+
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
+COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
+COPY apps/worker/package.json ./apps/worker/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/ui/package.json ./packages/ui/
+
+RUN npm install -g pnpm && pnpm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["pnpm", "--filter", "@tyotrack/web", "dev"]
