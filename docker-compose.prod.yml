@@ -7,7 +7,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: tyotrack_user
-      POSTGRES_PASSWORD: Tyotrack@13!#
+      POSTGRES_PASSWORD: Tyotrack2026
       POSTGRES_DB: tyotrack
     # No ports exposed in prod
     volumes:
@@ -27,7 +27,7 @@ services:
       - postgres
       - redis
     environment:
-      DATABASE_URL: "postgresql://tyotrack_user:Tyotrack@13!#@postgres:5432/tyotrack?schema=public"
+      DATABASE_URL: "postgresql://tyotrack_user:Tyotrack2026@postgres:5432/tyotrack?schema=public"
       REDIS_URL: "redis://redis:6379"
       JWT_SECRET: "change-this-in-vps-env"
       PORT: 3050
@@ -53,7 +53,7 @@ services:
       - postgres
       - redis
     environment:
-      DATABASE_URL: "postgresql://tyotrack_user:Tyotrack@13!#@postgres:5432/tyotrack?schema=public"
+      DATABASE_URL: "postgresql://tyotrack_user:Tyotrack2026@postgres:5432/tyotrack?schema=public"
       REDIS_URL: "redis://redis:6379"
 
 volumes:
