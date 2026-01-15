@@ -27,8 +27,8 @@ services:
       - postgres
       - redis
     environment:
-      DATABASE_URL: "postgresql://tyotrack_user:Tyotrack2026@postgres:5432/tyotrack?schema=public"
-      REDIS_URL: "redis://redis:6379"
+      DATABASE_URL: "postgresql://tyotrack_user:Tyotrack2026@tyotrack:5432/tyotrack?schema=public"
+      REDIS_URL: "redis://default:Dasindu@13#@tyotrack-tyoredi-18f47:6379"
       JWT_SECRET: "change-this-in-vps-env"
       PORT: 3050
 
@@ -53,8 +53,8 @@ services:
       - postgres
       - redis
     environment:
-      DATABASE_URL: "postgresql://tyotrack_user:Tyotrack2026@postgres:5432/tyotrack?schema=public"
-      REDIS_URL: "redis://redis:6379"
+      DATABASE_URL: "postgresql://tyotrack_user:Tyotrack2026@tyotrack:5432/tyotrack?schema=public"
+      REDIS_URL: "redis://default:Dasindu@13#@tyotrack-tyoredi-18f47:6379"
 
 volumes:
   postgres_data_prod:
