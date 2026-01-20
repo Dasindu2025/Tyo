@@ -1,0 +1,40 @@
+# Node modules
+node_modules/
+**/node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+frontend/dist/
+backend/dist/
+
+# Database
+*.db
+*.sqlite
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+logs/
+
+# Prisma
+backend/prisma/.env

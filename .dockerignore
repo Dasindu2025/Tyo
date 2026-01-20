@@ -1,0 +1,52 @@
+# Node modules
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist
+build
+*.tsbuildinfo
+
+# Database
+*.db
+*.sqlite
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Tests
+coverage
+.nyc_output
+
+# Frontend specific
+frontend/dist
+frontend/build
+frontend/.vite
+
+# Backend specific
+backend/dist
+backend/build
+
+# Prisma
+backend/prisma/migrations/*.sql

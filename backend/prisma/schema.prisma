@@ -1,0 +1,270 @@
+// Prisma Schema for Enterprise Worktime Tracking System
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MODELS - Authentication & Authorization
+// ============================================
+
+model SuperAdmin {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  name         String
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  companiesCreated Company[]
+
+  @@map("super_admins")
+  @@index([email])
+}
+
+model Company {
+  id          String    @id @default(uuid())
+  companyCode String    @unique @map("company_code")
+  name        String
+  email       String
+  phone       String?
+  address     String?
+  isActive    Boolean   @default(true) @map("is_active")
+  createdById String    @map("created_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  // Relations
+  createdBy        SuperAdmin         @relation(fields: [createdById], references: [id])
+  admins           CompanyAdmin[]
+  employees        Employee[]
+  projects         Project[]
+  workplaces       Workplace[]
+  workingHourTypes WorkingHourType[]
+  timeEntries      TimeEntry[]
+
+  @@map("companies")
+  @@index([companyCode])
+  @@index([isActive])
+  @@index([deletedAt])
+}
+
+model CompanyAdmin {
+  id           String    @id @default(uuid())
+  companyId    String    @map("company_id")
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  name         String
+  phone        String?
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  // Relations
+  company             Company      @relation(fields: [companyId], references: [id])
+  employeesCreated    Employee[]   @relation("EmployeeCreator")
+  projectsCreated     Project[]    @relation("ProjectCreator")
+  workplacesCreated   Workplace[]  @relation("WorkplaceCreator")
+  approvedTimeEntries TimeEntry[]  @relation("TimeEntryApprover")
+
+  @@map("company_admins")
+  @@index([companyId])
+  @@index([email])
+  @@index([isActive, deletedAt])
+}
+
+model Employee {
+  id           String    @id @default(uuid())
+  companyId    String    @map("company_id")
+  employeeCode String    @map("employee_code")
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  firstName    String    @map("first_name")
+  lastName     String    @map("last_name")
+  phone        String?
+  hireDate     DateTime  @map("hire_date")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdById  String    @map("created_by")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  // Relations
+  company     Company      @relation(fields: [companyId], references: [id])
+  createdBy   CompanyAdmin @relation("EmployeeCreator", fields: [createdById], references: [id])
+  timeEntries TimeEntry[]
+
+  @@unique([companyId, employeeCode])
+  @@map("employees")
+  @@index([companyId, isActive, deletedAt])
+  @@index([email])
+  @@index([employeeCode])
+}
+
+// ============================================
+// RESOURCE MODELS - Projects, Workplaces, etc.
+// ============================================
+
+model Project {
+  id          String    @id @default(uuid())
+  companyId   String    @map("company_id")
+  projectCode String    @map("project_code")
+  name        String
+  description String?
+  isActive    Boolean   @default(true) @map("is_active")
+  createdById String    @map("created_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  // Relations
+  company     Company      @relation(fields: [companyId], references: [id])
+  createdBy   CompanyAdmin @relation("ProjectCreator", fields: [createdById], references: [id])
+  timeEntries TimeEntry[]
+
+  @@unique([companyId, projectCode])
+  @@map("projects")
+  @@index([companyId, isActive, deletedAt])
+  @@index([projectCode])
+}
+
+model Workplace {
+  id            String    @id @default(uuid())
+  companyId     String    @map("company_id")
+  workplaceCode String    @map("workplace_code")
+  name          String
+  location      String?
+  isActive      Boolean   @default(true) @map("is_active")
+  createdById   String    @map("created_by")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  // Relations
+  company     Company      @relation(fields: [companyId], references: [id])
+  createdBy   CompanyAdmin @relation("WorkplaceCreator", fields: [createdById], references: [id])
+  timeEntries TimeEntry[]
+
+  @@unique([companyId, workplaceCode])
+  @@map("workplaces")
+  @@index([companyId, isActive, deletedAt])
+  @@index([workplaceCode])
+}
+
+model WorkingHourType {
+  id               String   @id @default(uuid())
+  companyId        String   @unique @map("company_id")
+  dayStartTime     String   @map("day_start_time") // Time as HH:mm:ss
+  dayEndTime       String   @map("day_end_time")
+  eveningStartTime String   @map("evening_start_time")
+  eveningEndTime   String   @map("evening_end_time")
+  nightStartTime   String   @map("night_start_time")
+  nightEndTime     String   @map("night_end_time")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@map("working_hour_types")
+}
+
+// ============================================
+// TIME TRACKING MODELS
+// ============================================
+
+model TimeEntry {
+  id           String    @id @default(uuid())
+  companyId    String    @map("company_id")
+  employeeId   String    @map("employee_id")
+  projectId    String    @map("project_id")
+  workplaceId  String    @map("workplace_id")
+  entryDate    DateTime  @map("entry_date") @db.Date
+  timeIn       DateTime  @map("time_in")
+  timeOut      DateTime  @map("time_out")
+  totalHours   Decimal   @map("total_hours") @db.Decimal(5, 2)
+  dayHours     Decimal   @map("day_hours") @db.Decimal(5, 2)
+  eveningHours Decimal   @map("evening_hours") @db.Decimal(5, 2)
+  nightHours   Decimal   @map("night_hours") @db.Decimal(5, 2)
+  isFullDay    Boolean   @default(false) @map("is_full_day")
+  isApproved   Boolean?  @map("is_approved")
+  approvedById String?   @map("approved_by")
+  approvedAt   DateTime? @map("approved_at")
+  notes        String?   @db.Text
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  // Relations
+  company    Company              @relation(fields: [companyId], references: [id])
+  employee   Employee             @relation(fields: [employeeId], references: [id])
+  project    Project              @relation(fields: [projectId], references: [id])
+  workplace  Workplace            @relation(fields: [workplaceId], references: [id])
+  approvedBy CompanyAdmin?        @relation("TimeEntryApprover", fields: [approvedById], references: [id])
+  auditLogs  TimeEntryAuditLog[]
+
+  @@unique([companyId, employeeId, entryDate, timeIn, timeOut])
+  @@map("time_entries")
+  @@index([companyId, entryDate(sort: Desc)])
+  @@index([employeeId, entryDate(sort: Desc)])
+  @@index([projectId])
+  @@index([workplaceId])
+  @@index([isApproved])
+  @@index([deletedAt])
+}
+
+model TimeEntryAuditLog {
+  id            String   @id @default(uuid())
+  timeEntryId   String   @map("time_entry_id")
+  action        String // created, updated, deleted, approved, rejected
+  changedById   String   @map("changed_by")
+  changedByType String   @map("changed_by_type") // employee, admin
+  oldValues     Json?    @map("old_values")
+  newValues     Json?    @map("new_values")
+  timestamp     DateTime @default(now())
+
+  // Relations
+  timeEntry TimeEntry @relation(fields: [timeEntryId], references: [id])
+
+  @@map("time_entry_audit_log")
+  @@index([timeEntryId])
+  @@index([timestamp(sort: Desc)])
+}
+
+// ============================================
+// SUPPORT MODELS
+// ============================================
+
+model EntityCodeCounter {
+  id            String @id @default(uuid())
+  companyId     String @default("") @map("company_id") // Empty string for global entities
+  entityType    String @map("entity_type") // company, employee, project, workplace
+  currentNumber Int    @default(0) @map("current_number")
+  prefix        String
+
+  @@unique([companyId, entityType])
+  @@map("entity_code_counters")
+  @@index([companyId, entityType])
+}
+
+model Session {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  userType         String   @map("user_type") // super_admin, admin, employee
+  refreshTokenHash String   @map("refresh_token_hash")
+  expiresAt        DateTime @map("expires_at")
+  ipAddress        String?  @map("ip_address")
+  userAgent        String?  @map("user_agent")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@map("sessions")
+  @@index([userId, userType])
+  @@index([expiresAt])
+  @@index([refreshTokenHash])
+}
